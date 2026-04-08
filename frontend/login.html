@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Book Platform — Login</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/login.css">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                        <rect width="40" height="40" rx="8" fill="var(--accent)"/>
+                        <path d="M12 10h16a2 2 0 012 2v16a2 2 0 01-2 2H12a2 2 0 01-2-2V12a2 2 0 012-2z" fill="none" stroke="#fff" stroke-width="2"/>
+                        <path d="M14 16h12M14 20h8M14 24h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h1>PDF Book Platform</h1>
+                <p class="subtitle">Research-grade PDF reading & annotation</p>
+            </div>
+
+            <form id="loginForm" autocomplete="on">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="username" placeholder="admin@bookplatform.com" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+                <div id="errorMsg" class="error-message" style="display:none;"></div>
+                <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+                    <span class="btn-text">Sign In</span>
+                    <span class="btn-loader" style="display:none;">
+                        <svg class="spinner" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="32" stroke-linecap="round"/></svg>
+                    </span>
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <p>Default admin: <code>admin@bookplatform.com</code> / <code>Admin123!</code></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const errEl = document.getElementById('errorMsg');
+            errEl.style.display = 'none';
+            btn.disabled = true;
+            btn.querySelector('.btn-text').style.display = 'none';
+            btn.querySelector('.btn-loader').style.display = 'inline-flex';
+
+            try {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                await Auth.login(email, password);
+            } catch (err) {
+                errEl.textContent = err.message || 'Login failed';
+                errEl.style.display = 'block';
+                btn.disabled = false;
+                btn.querySelector('.btn-text').style.display = 'inline';
+                btn.querySelector('.btn-loader').style.display = 'none';
+            }
+        });
+
+        // If already logged in, redirect
+        if (Auth.getToken()) {
+            window.location.href = '/dashboard';
+        }
+    </script>
+</body>
+</html>

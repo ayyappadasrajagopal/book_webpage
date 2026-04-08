@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Book Platform — Dashboard</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- ===== Top Bar ===== -->
+        <header class="topbar">
+            <div class="logo-section">
+                <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+                    <rect width="40" height="40" rx="8" fill="var(--accent)"/>
+                    <path d="M14 16h12M14 20h8M14 24h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <h1>Book Platform</h1>
+            </div>
+
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="search" id="globalSearch" placeholder="Search PDFs, annotations, notes...">
+            </div>
+
+            <div class="user-section">
+                <span class="user-name" id="userName"></span>
+                <a href="/admin" id="adminLink" class="btn btn-sm btn-secondary" style="display:none;">Admin</a>
+                <button class="btn btn-sm btn-ghost" onclick="Auth.logout()">Logout</button>
+            </div>
+        </header>
+
+        <!-- ===== Left Sidebar — PDF Library ===== -->
+        <aside class="sidebar-left">
+            <div class="sidebar-header">
+                <h2>PDF Library</h2>
+                <button class="btn btn-sm btn-primary" id="uploadBtn">+ Upload</button>
+            </div>
+            <input type="file" id="fileInput" accept=".pdf" style="display:none">
+
+            <div class="pdf-list" id="pdfList">
+                <div class="empty-state" id="noPdfs">
+                    <p>No PDFs yet.<br>Upload your first document.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ===== Main Content — PDF Viewer ===== -->
+        <main class="main-content">
+            <!-- Toolbar -->
+            <div class="viewer-toolbar" id="viewerToolbar" style="display:none;">
+                <!-- Navigation -->
+                <div class="toolbar-group page-nav">
+                    <button class="toolbar-btn" id="prevPage" title="Previous Page">◀</button>
+                    <input type="number" id="pageInput" min="1" value="1">
+                    <span>/ <span id="totalPages">0</span></span>
+                    <button class="toolbar-btn" id="nextPage" title="Next Page">▶</button>
+                </div>
+
+                <!-- Zoom -->
+                <div class="toolbar-group zoom-controls">
+                    <button class="toolbar-btn" id="zoomOut" title="Zoom Out">−</button>
+                    <span id="zoomLevel">100%</span>
+                    <button class="toolbar-btn" id="zoomIn" title="Zoom In">+</button>
+                    <button class="toolbar-btn" id="zoomFit" title="Fit Width">⬜</button>
+                </div>
+
+                <!-- Annotation Tools -->
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" data-tool="select" title="Select">🖱️</button>
+                    <button class="toolbar-btn" data-tool="highlight" title="Highlight">🖍️</button>
+                    <button class="toolbar-btn" data-tool="rectangle" title="Rectangle">▭</button>
+                    <button class="toolbar-btn" data-tool="circle" title="Circle">◯</button>
+                    <button class="toolbar-btn" data-tool="arrow" title="Arrow">↗</button>
+                    <button class="toolbar-btn" data-tool="freehand" title="Freehand Draw">✏️</button>
+                    <button class="toolbar-btn" data-tool="text_note" title="Text Note">📝</button>
+                </div>
+
+                <!-- Color & Stroke -->
+                <div class="toolbar-group">
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="annotColor" value="#FFFF00" title="Annotation Color">
+                    </div>
+                    <select id="strokeWidth" title="Stroke Width" style="width: 60px; padding: 4px;">
+                        <option value="1">1px</option>
+                        <option value="2" selected>2px</option>
+                        <option value="3">3px</option>
+                        <option value="5">5px</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- PDF Display -->
+            <div class="pdf-viewer-area" id="viewerArea">
+                <div class="empty-state" id="emptyViewer">
+                    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="12" y="4" width="40" height="56" rx="4"/>
+                        <path d="M20 16h24M20 24h16M20 32h20M20 40h12"/>
+                    </svg>
+                    <h3>No Document Open</h3>
+                    <p>Select a PDF from the library or upload a new one</p>
+                </div>
+                <div class="pdf-canvas-wrapper" id="canvasWrapper" style="display:none;">
+                    <canvas id="pdfCanvas"></canvas>
+                    <canvas id="annotationCanvas"></canvas>
+                </div>
+            </div>
+        </main>
+
+        <!-- ===== Right Sidebar — Annotations & Notes ===== -->
+        <aside class="sidebar-right">
+            <div class="sidebar-tabs">
+                <button class="sidebar-tab active" data-panel="annotations">Annotations</button>
+                <button class="sidebar-tab" data-panel="notes">Notes</button>
+                <button class="sidebar-tab" data-panel="drawing">Drawing</button>
+            </div>
+
+            <!-- Annotations Panel -->
+            <div class="sidebar-panel active" id="panel-annotations">
+                <div id="annotationList">
+                    <p class="text-muted text-sm" style="text-align:center;padding:20px;">
+                        Open a PDF to see annotations
+                    </p>
+                </div>
+            </div>
+
+            <!-- Notes Panel -->
+            <div class="sidebar-panel" id="panel-notes">
+                <div style="margin-bottom:12px;">
+                    <button class="btn btn-sm btn-primary" id="newNoteBtn" style="width:100%;">+ New Note</button>
+                </div>
+                <div id="noteEditor" style="display:none;">
+                    <div class="form-group">
+                        <input type="text" id="noteTitle" placeholder="Note title...">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="noteContent" rows="8" placeholder="Write your note here..."></textarea>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn btn-sm btn-primary" id="saveNoteBtn">Save</button>
+                        <button class="btn btn-sm btn-secondary" id="cancelNoteBtn">Cancel</button>
+                    </div>
+                </div>
+                <div id="noteList"></div>
+            </div>
+
+            <!-- Drawing Panel -->
+            <div class="sidebar-panel" id="panel-drawing">
+                <div class="drawing-panel">
+                    <div class="drawing-tools">
+                        <button class="btn btn-sm btn-secondary" id="sketchPen">Pen</button>
+                        <button class="btn btn-sm btn-secondary" id="sketchEraser">Eraser</button>
+                        <input type="color" id="sketchColor" value="#6366f1" style="width:28px;height:28px;">
+                        <button class="btn btn-sm btn-secondary" id="sketchClear">Clear</button>
+                        <button class="btn btn-sm btn-primary" id="sketchSave">Save</button>
+                    </div>
+                    <canvas id="sketchCanvas" width="280" height="400"></canvas>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Search Results Dropdown -->
+    <div id="searchResults" class="card" style="display:none;position:fixed;top:56px;left:300px;width:480px;max-height:400px;overflow-y:auto;z-index:200;"></div>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/utils.js"></script>
+    <script src="/static/js/pdf-viewer.js"></script>
+    <script src="/static/js/annotations.js"></script>
+    <script src="/static/js/notes.js"></script>
+    <script src="/static/js/drawing.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

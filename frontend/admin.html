@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Book Platform — Admin</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- ===== Top Bar ===== -->
+        <header class="admin-topbar">
+            <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+                <rect width="40" height="40" rx="8" fill="var(--accent)"/>
+                <path d="M14 16h12M14 20h8M14 24h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <h1>Admin Dashboard</h1>
+            <span class="admin-badge">ADMIN</span>
+            <span class="spacer"></span>
+            <span class="user-name" id="adminUserName"></span>
+            <a href="/dashboard" class="btn btn-sm btn-secondary">← Dashboard</a>
+            <button class="btn btn-sm btn-ghost" onclick="Auth.logout()">Logout</button>
+        </header>
+
+        <!-- ===== Sidebar ===== -->
+        <nav class="admin-sidebar">
+            <button class="admin-nav-item active" data-section="overview">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                Overview
+            </button>
+            <button class="admin-nav-item" data-section="users">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                Users
+            </button>
+            <button class="admin-nav-item" data-section="pdfs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+                PDF Library
+            </button>
+            <button class="admin-nav-item" data-section="logs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+                Activity Logs
+            </button>
+        </nav>
+
+        <!-- ===== Main Content ===== -->
+        <div class="admin-main">
+            <!-- Overview Section -->
+            <section class="admin-section active" id="section-overview">
+                <h2>Platform Overview</h2>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Users</div>
+                        <div class="stat-value" id="statUsers">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Active Users</div>
+                        <div class="stat-value" id="statActiveUsers">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total PDFs</div>
+                        <div class="stat-value" id="statPdfs">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Annotations</div>
+                        <div class="stat-value" id="statAnnotations">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Notes</div>
+                        <div class="stat-value" id="statNotes">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Storage Used</div>
+                        <div class="stat-value" id="statStorage">—</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom:12px;">Recent Activity</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr>
+                        </thead>
+                        <tbody id="recentLogs"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section class="admin-section" id="section-users">
+                <div class="flex items-center justify-between mb-4">
+                    <h2>User Management</h2>
+                    <button class="btn btn-primary" id="addUserBtn">+ Add User</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="usersTable"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- PDFs Section -->
+            <section class="admin-section" id="section-pdfs">
+                <h2>PDF Library</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Filename</th><th>Size</th><th>Owner</th><th>Public</th><th>Uploaded</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="pdfsTable"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Logs Section -->
+            <section class="admin-section" id="section-logs">
+                <h2>Activity Logs</h2>
+                <div class="log-filters">
+                    <select id="logActionFilter">
+                        <option value="">All Actions</option>
+                        <option value="login">Login</option>
+                        <option value="upload_pdf">Upload PDF</option>
+                        <option value="delete_pdf">Delete PDF</option>
+                        <option value="create_annotation">Create Annotation</option>
+                        <option value="update_annotation">Update Annotation</option>
+                        <option value="delete_annotation">Delete Annotation</option>
+                        <option value="create_note">Create Note</option>
+                    </select>
+                    <button class="btn btn-sm btn-secondary" id="refreshLogs">Refresh</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Time</th><th>User</th><th>Action</th><th>Details</th><th>IP</th></tr>
+                        </thead>
+                        <tbody id="logsTable"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/utils.js"></script>
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>
